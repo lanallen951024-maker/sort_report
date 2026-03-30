@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>選擇排序 Selection Sort — 示範教學</title>
+    <style>
+        :root{--bg:#0f1724;--panel:#0b1220;--muted:#9aa7c0;--accent:#4ac1ff;--accent-2:#ffa94d;--ok:#2bd39b;--danger:#ff6b6b;--card:#0b1220}
+        *{box-sizing:border-box}
+        body{margin:0;font-family:Inter,Segoe UI,Arial;background:linear-gradient(180deg,var(--bg),#07101a);color:#e6eef8;padding:28px}
+        .wrap{max-width:980px;margin:0 auto}
+        h1{display:flex;align-items:center;gap:10px;font-weight:600}
+        .meta{color:var(--muted);margin-top:6px}
+        .panel{background:var(--panel);border-radius:12px;padding:18px;margin-top:16px;box-shadow:0 6px 18px rgba(2,6,23,.6)}
+        .desc{background:#071428;padding:12px;border-radius:8px;color:var(--muted)}
+        .stats{display:flex;gap:10px;margin:12px 0;align-items:center}
+        .stat{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,.03);font-size:13px}
+        .controls{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
+        input[type=text]{padding:8px;border-radius:8px;border:none;background:#071428;color:inherit;min-width:260px}
+        button{background:linear-gradient(180deg,var(--accent),#2aa8e6);border:none;color:#04212b;padding:10px 14px;border-radius:999px;cursor:pointer}
+        button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,.04)}
+        button.warn{background:linear-gradient(180deg,var(--accent-2),#ff9244);color:#05120b}
+        .small{padding:8px 10px;font-size:13px}
+        #visualWrap{height:320px;margin-top:14px;display:flex;align-items:center;justify-content:center}
+        #visual{width:100%;height:100%;display:flex;align-items:flex-end;gap:10px;padding:18px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent)}
+        .bar{flex:1;display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(180deg,#2b8fd9,#1b6aa8);color:#fff;border-radius:6px 6px 4px 4px;padding:6px 4px;font-weight:600}
+        .bar.compare{background:linear-gradient(180deg,#ffa94d,#ff7a00)}
+        .bar.swap{background:linear-gradient(180deg,#ff6b6b,#ff3956)}
+        .bar.sorted{background:linear-gradient(180deg,#2bd39b,#18a172)}
+        .legend{display:flex;gap:12px;align-items:center;margin-top:10px;color:var(--muted)}
+        .legend .item{display:flex;gap:8px;align-items:center}
+        .dot{width:14px;height:14px;border-radius:4px}
+        .dot.un{background:#2b8fd9}
+        .dot.cmp{background:#ffa94d}
+        .dot.swap{background:#ff6b6b}
+        .dot.done{background:#2bd39b}
+        .footerControls{display:flex;gap:8px;align-items:center;margin-top:14px}
+        .status{margin-left:auto;color:var(--muted)}
+        .controls input[type=range]{width:160px}
+        .badge{background:rgba(255,255,255,.03);padding:6px 10px;border-radius:999px;color:var(--muted);font-size:13px}
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>🔷 選擇排序法</h1>
+        <div style="margin-top:8px">
+            <a href="index.html" class="badge">回首頁</a>
+            <a href="bubble_sort.html" class="badge" style="margin-left:8px">氣泡排序 Bubble Sort</a>
+        </div>
+        <div class="meta">Selection Sort — 每輪選出最小/最大的元素並放到已排序區</div>
+
+        <div class="panel">
+            <div class="desc">
+                原理：選擇排序會在未排序的區間中找到最小（或最大）元素，將其與該區間的起始位置交換，然後將起始位置向右移動一格。重複直到所有元素排序完成。這個範例會逐步顯示比較與交換過程。
+            </div>
+
+            <div class="stats">
+                <div class="stat">第 <span id="pass">0</span> 輪 / 共 <span id="totalPass">0</span> 輪</div>
+                <div class="stat">比較次數：<span id="comp">0</span></div>
+                <div class="stat">交換次數：<span id="swaps">0</span></div>
+                <div class="stat">狀態：<span id="status">暫停</span></div>
+            </div>
+
+            <div class="controls">
+                <input id="input" type="text" placeholder="輸入數字，逗號分隔 e.g. 64,34,25,12,22,11,90" />
+                <button id="rand" class="ghost small">亂數陣列</button>
+                <select id="order" class="small">
+                    <option value="asc">遞增</option>
+                    <option value="desc">遞減</option>
+                </select>
+                <label class="small">速度 <input id="speed" type="range" min="20" max="800" value="220" /></label>
+                <div style="display:flex;gap:6px;align-items:center">
+                    <button id="start" class="small">開始</button>
+                    <button id="pause" class="small ghost">暫停</button>
+                    <button id="step" class="small ghost">單步</button>
+                    <button id="reset" class="small ghost">重置</button>
+                </div>
+            </div>
+
+            <div id="visualWrap">
+                <div id="visual" aria-label="visualization"></div>
+            </div>
+
+            <div class="legend">
+                <div class="item"><span class="dot un"></span> 未排序</div>
+                <div class="item"><span class="dot cmp"></span> 比較中</div>
+                <div class="item"><span class="dot swap"></span> 交換中</div>
+                <div class="item"><span class="dot done"></span> 已排序</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const inputEl = document.getElementById('input');
+        const startBtn = document.getElementById('start');
+        const pauseBtn = document.getElementById('pause');
+        const stepBtn = document.getElementById('step');
+        const resetBtn = document.getElementById('reset');
+        const randBtn = document.getElementById('rand');
+        const visual = document.getElementById('visual');
+        const passEl = document.getElementById('pass');
+        const totalPassEl = document.getElementById('totalPass');
+        const compEl = document.getElementById('comp');
+        const swapsEl = document.getElementById('swaps');
+        const statusEl = document.getElementById('status');
+        const speedEl = document.getElementById('speed');
+        const orderEl = document.getElementById('order');
+
+        let array = [];
+        let working = false;
+        let paused = true;
+        let stepRequested = false;
+        let stats = {pass:0, comps:0, swaps:0};
+
+        function randArray(n=7, max=100){
+            return Array.from({length:n}, ()=>Math.floor(Math.random()*max)+1);
+        }
+
+        function parseInput(text){
+            if(!text) return [];
+            return text.split(',').map(s=>Number(s.trim())).filter(n=>!Number.isNaN(n));
+        }
+
+        function render(){
+            visual.innerHTML='';
+            if(array.length===0) return;
+            const max = Math.max(...array.map(v=>Math.abs(v)),1);
+            for(let i=0;i<array.length;i++){
+                const val = array[i];
+                const el = document.createElement('div');
+                el.className='bar';
+                el.style.height = (Math.abs(val)/max*100) + '%';
+                el.style.margin = '0 6px';
+                el.textContent = val;
+                el.dataset.index = i;
+                visual.appendChild(el);
+            }
+        }
+
+        function setStatus(s){ statusEl.textContent = s; }
+        function updateStats(){ passEl.textContent = stats.pass; totalPassEl.textContent = Math.max(0,array.length-1); compEl.textContent = stats.comps; swapsEl.textContent = stats.swaps; }
+
+        function colorPair(i, j, mode){
+            const bars = visual.children;
+            for(let k=0;k<bars.length;k++) bars[k].classList.remove('compare','swap','sorted');
+            if(mode==='compare'){
+                if(bars[i]) bars[i].classList.add('compare');
+                if(bars[j]) bars[j].classList.add('compare');
+            }else if(mode==='swap'){
+                if(bars[i]) bars[i].classList.add('swap');
+                if(bars[j]) bars[j].classList.add('swap');
+            }else if(mode==='sorted'){
+                for(let s=0;s<stats.pass;s++){ if(bars[s]) bars[s].classList.add('sorted'); }
+            }
+        }
+
+        function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+        async function doPause(){
+            while(paused && !stepRequested){ await sleep(50); }
+            if(stepRequested){ stepRequested=false; paused=true; }
+        }
+
+        async function selectionSortControlled(){
+            working = true; paused = false; setStatus('執行中');
+            stats = {pass:0, comps:0, swaps:0}; updateStats();
+            const asc = orderEl.value==='asc';
+            const n = array.length;
+            for(let i=0;i<n-1;i++){
+                stats.pass = i+1; updateStats();
+                let minIdx = i;
+                for(let j=i+1;j<n;j++){
+                    if(paused) await doPause();
+                    stats.comps++; updateStats();
+                    colorPair(minIdx,j,'compare');
+                    await sleep(Number(speedEl.value));
+                    if(asc ? array[j] < array[minIdx] : array[j] > array[minIdx]){
+                        minIdx = j;
+                    }
+                    render();
+                }
+                if(minIdx !== i){
+                    colorPair(i,minIdx,'swap');
+                    await sleep(Number(speedEl.value)/2);
+                    const t = array[i]; array[i]=array[minIdx]; array[minIdx]=t;
+                    stats.swaps++; updateStats();
+                    render();
+                    await sleep(Number(speedEl.value)/2);
+                }
+                colorPair(null,null,'sorted');
+                render();
+            }
+            const bars = visual.children;
+            for(let k=0;k<bars.length;k++) bars[k].classList.add('sorted');
+            setStatus('完成'); working=false; paused=true; updateStats();
+        }
+
+        startBtn.addEventListener('click', async ()=>{
+            if(working){ paused=false; setStatus('執行中'); return; }
+            const parsed = parseInput(inputEl.value);
+            if(parsed.length>0) array = parsed.slice();
+            if(array.length===0){ array = randArray(7,100); inputEl.value = array.join(','); }
+            render();
+            selectionSortControlled();
+        });
+
+        pauseBtn.addEventListener('click', ()=>{ if(!working) return; paused=true; setStatus('暫停'); });
+
+        stepBtn.addEventListener('click', ()=>{ if(!working){ startBtn.click(); paused=true; } stepRequested=true; paused=false; setStatus('單步'); });
+
+        resetBtn.addEventListener('click', ()=>{ working=false; paused=true; stepRequested=false; array=[]; inputEl.value=''; visual.innerHTML=''; stats={pass:0,comps:0,swaps:0}; updateStats(); setStatus('暫停'); });
+
+        randBtn.addEventListener('click', ()=>{ const a = randArray(7,100); array=a; inputEl.value=a.join(','); render(); stats={pass:0,comps:0,swaps:0}; updateStats(); setStatus('暫停'); });
+
+        array = [64,34,25,12,22,11,90]; inputEl.value = array.join(','); render(); updateStats(); setStatus('暫停');
+    </script>
+</body>
+</html>
